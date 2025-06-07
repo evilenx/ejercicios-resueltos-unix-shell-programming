@@ -1,0 +1,7 @@
+# count the number of files in the memos directory
+
+docs=$HOME/documents
+let=$docs/letters
+prop=$docs/proposals
+
+ls $docs/memos | wc -l 

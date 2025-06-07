@@ -1,0 +1,4 @@
+#c. Find the number users on your system whose user ids are greater than 99.
+
+cat /etc/passwd | cut -d: -f1,3 | grep ':.\{3,\}' | wc -l
+

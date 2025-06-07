@@ -1,0 +1,9 @@
+# Move all files whose names contain a capital letter from the letters directory to the current
+# directory
+
+
+docs=$HOME/documents
+let=$docs/letters
+prop=$docs/proposals
+
+cp $let/* prop

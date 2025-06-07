@@ -1,0 +1,3 @@
+# Modify lu so that it ignored case when doing the lookup
+
+grep -i "$1" phonebook

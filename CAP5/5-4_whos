@@ -1,0 +1,9 @@
+# write a program called whos to display a sorted list of the logged-in users.  Just display the usernames and no other information. Type in the porgram ;and test it out. 
+
+
+# soluction
+
+
+# Display a sorted list of the logged-in users
+who | cut -d' ' -f1 | sort -u
+

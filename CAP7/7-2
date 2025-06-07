@@ -1,0 +1,3 @@
+# What happendss if you forget to supply an argument to the lu program? Waht happens if the argument is null (as in, lu "")?
+
+echo "Respuesta: En ambos casos grep coincide con todo y, en consecuencia, toda la libreta telefónica se escribe en la salida estándar."

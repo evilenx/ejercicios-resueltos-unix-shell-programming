@@ -1,0 +1,9 @@
+# write the commands in terms of these variables to
+
+a. List the contents of the documents directory
+
+docs=$HOME/documents
+let=$docs/letters
+prop=$docs/proposals
+
+ls $docs

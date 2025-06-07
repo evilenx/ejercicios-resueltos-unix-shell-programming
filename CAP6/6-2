@@ -1,0 +1,20 @@
+# write the commands to remove all the space characters stored in the shell variable text. Then write the commands
+#to count all the aphabetic characters. (hint: Use sed an wc) What happens to special character sequeences such as
+# \n if they're stored inside text?
+
+
+
+text='a b  c    d'
+
+text=$(echo "$text" | tr -d ' ')
+
+echo "$text"
+
+
+
+
+text='a b  c    d'
+
+text=$(echo "$text" | sed 's/ *//g')
+
+echo "$text"

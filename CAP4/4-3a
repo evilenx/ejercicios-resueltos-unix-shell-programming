@@ -1,0 +1,5 @@
+# find all logged-in users with usernames of at least four characters.
+
+who | cut -d' ' -f1 | uniq | grep '^.\{4,\}$'
+
+

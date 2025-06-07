@@ -1,0 +1,10 @@
+# write a program called home that takes the name of user as its single argument and prints taht user's home directory
+# so
+# home aviles 
+# would print
+# /home/avilesh
+
+# if /home/avilesh is aviles home directory. (Hint: Recall that the home directory is the sixth field stored in the file /etc/passwd
+
+
+echo $(grep "$1" /etc/passwd | cut -d : -f6)

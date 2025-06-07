@@ -1,0 +1,24 @@
+#!/bin/bash
+
+# Use the date and who commands to write a program called conntime that prints
+# the number of hours and minutes that a user has been logged on to the system
+# (assume that this is less than 24 hours).
+
+[ $# -ne 1 ] && { echo 'error: must have exactly 1 argument' >&2; exit 1; }
+
+user_info=$(who | grep "$1")
+[ -z "$user_info" ] && { echo 'error: argument had no matches' >&2; exit 1; }
+[ $(echo "$user_info" | wc -l) -ge 2 ] && { echo 'error: argument matches more than 1 name' >&2; exit 1; }
+
+log_hr=$(who | cut -c34-35)
+log_min=$(who | cut -c37-38)
+curr_hr=$(date | cut -c12-13)
+curr_min=$(date | cut -c15-16)
+
+diff_hr=$((curr_hr - log_hr))
+diff_min=$((curr_min - log_min))
+
+[ $diff_min -lt 0 ] && { : $((diff_hr -= 1)); : $((diff_min += 60)); }
+[ $diff_hr -lt 0 ] && : $((diff_hr += 24))
+
+printf "The amount of time since login is:  %d hours and %d minutes\n" $diff_hr $((diff_min + 0))

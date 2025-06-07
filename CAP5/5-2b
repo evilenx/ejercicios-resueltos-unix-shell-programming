@@ -1,0 +1,6 @@
+#b.  Copy all files from the letters directory to the proposals directory
+
+docs=$HOME/documents
+let=$docs/letters
+prop=$docs/proposals
+cp $let/* prop

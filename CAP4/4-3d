@@ -1,0 +1,3 @@
+# d. List all the files in your directory in decreasing order of file size.
+
+ls -rS | tr ' ' '\n'
