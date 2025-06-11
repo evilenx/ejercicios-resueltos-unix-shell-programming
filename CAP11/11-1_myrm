@@ -1,0 +1,77 @@
+#1:Write a program called myrm that takes as arguments the names of files to be removed. If the 
+#global variable MAXFILES is set, take it as the maximum number of files to remove without 
+#question. If the variable is not set, use 10 as the maximum. If the number of files to be 
+#removed exceeds this count, ask the user for confirmation before removing the files:
+
+#$ ls | wc -l
+#25
+
+#$ myrm *                       Remove them all
+
+#Remove 25 files (y/n)? n
+#files not removed
+#$ MAXFILES=100 myrm *
+
+#$ ls
+
+#$                              All files removed
+
+#If MAXFILES is set to zero, the check should be suppressed.
+
+if [ $# -eq 0 ]; then
+    echo "Uso: myrm Archivo..."
+    exit 1
+fi
+
+if [ -z "$MAXFILES" ]; then
+    MAXFILES=10
+fi
+
+case $MAXFILES in
+    ''|*[!0-9]*)
+        echo "Error: se proporcionó un valor entero no positivo para MAXFILES"
+        exit 1
+        ;;
+esac
+
+rmlist=""
+missinglist=""
+n_remove=0
+
+while [ "$#" -gt 0 ]; do
+    if [ -f "$1" ]; then
+        rmlist="$rmlist $1"
+        n_remove=$((n_remove + 1))
+    else
+        missinglist="$missinglist $1"
+    fi
+    shift
+done
+
+if [ -n "$missinglist" ]; then
+    echo "Los siguientes archivos no existen:$missinglist"
+    if [ -n "$rmlist" ]; then
+        printf "¿Se deben eliminar los archivos restantes (s/n)? "
+        read answer
+        if [ "$answer" != "s" ]; then
+            echo "Archivos no eliminados"
+            exit 0
+        fi
+    else
+        echo "No quedan archivos para eliminar"
+        exit 0
+    fi
+fi
+
+if [ $n_remove -gt $MAXFILES ] && [ $MAXFILES -gt 0 ]; then
+    printf "¿Remover $n_remove archivos (s/n)? "
+    read answer
+    if [ "$answer" != "s" ]; then
+        echo "Archivos no eliminados"
+        exit 0
+    fi
+fi
+
+if [ $n_remove -gt 0 ]; then
+    rm $rmlist
+fi
