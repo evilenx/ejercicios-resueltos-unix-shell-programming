@@ -1,0 +1,55 @@
+
+# Modify the rem program used by rolo so that if multiple entries are found, the program will
+# prompt the user for the entry to be removed.
+# Here's a sample session:
+#
+#     $ rolo
+#
+#     ...
+#
+#     Please select one of the above (1-3): 3
+#
+#     Enter name to be removed: Susan
+#
+#     More than one match; please select the one to remove:
+#
+#     Susan Goldberg Remove (y/n)? n
+#     Susan Topple Remove (y/n)? y
+
+#
+# If arguments are supplied, then do a lookup
+#
+
+
+
+
+# Verificar sii PHONEBOOK está configurado y establecer un valor predeterminado
+PHONEBOOK=${PHONEBOOK:-$HOME/phonebook}
+export PHONEBOOK
+
+# Asegurarse de que el archivo especificado por PHONEBOOK existe
+if [ ! -f "$PHONEBOOK" ]; then
+    read -p "El archivo $PHONEBOOK no existe; ¿crear un archivo vacío (s/n)? " choice
+    [ "$choice" = "s" ] && touch "$PHONEBOOK" || exit 1
+fi
+
+PHB_STANDALONE=TRUE
+export PHB_STANDALONE
+
+# Si hay argumentos, realizar búsqueda
+[ "$#" -ne 0 ] && { lu "$@"; exit; }
+
+# Menú principal
+while true; do
+    echo -e "\n------------------\n¿Te gustaría:\n------------------\n0. Salir\n1. Buscar\n2. Agregar\n3. Eliminar\nSelecciona (0-3): "
+    read choice
+
+    case "$choice" in
+        0) exit;;
+        1) read -p "Nombre a buscar: " name; lu "$name";;
+        2) read -p "Nombre a agregar: " name; read -p "Número: " number; add "$name" "$number";;
+        3) read -p "Nombre a eliminar: " name; rem "$name";;
+        *) echo "Opción inválida";;
+    esac
+done
+
