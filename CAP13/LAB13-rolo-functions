@@ -1,0 +1,199 @@
+#
+# Set PHONEBOOK to point to the phone book file
+: ${PHONEBOOK:="$HOME/phonebook"}
+export PHONEBOOK
+
+if [ ! -e "$PHONEBOOK" ]; then
+    echo "$PHONEBOOK does not exist!"
+    printf "Should I create it for you (y/n)? "
+    read answer
+
+    if [ "$answer" != "y" ]; then
+        exit 1
+    fi
+
+    > "$PHONEBOOK" || exit 1
+fi
+
+# Function to check if variable names are valid
+check_invalid() {
+    if [ $# -eq 0 ]; then
+        echo "Usage: check_invalid varname1 varname2 ... varnamen"
+        return 1
+    fi
+
+    for varname in "$@"; do
+        if [[ "$varname" =~ ^[A-Za-z_][A-Za-z0-9_]*$ ]]; then
+            echo "$varname VALID."
+        else
+            echo "$varname INVALID."
+        fi
+    done
+}
+
+# Function to check if input is a "yes" response
+is_yes() {
+    if [ $# -ne 1 ]; then
+        return 1
+    fi
+
+    local input
+    input=$(echo "$1" | tr '[:upper:]' '[:lower:]')
+
+    [[ "$input" == "yes" || "$input" == "y" ]]
+}
+
+# Function to add someone to the phonebook
+add_entry() {
+    echo "Type in your new entry"
+    echo "When you're done, type just a single Enter on the line."
+
+    local first=""
+    local entry=""
+    local line
+
+    while true; do
+        printf ">> "
+        read line
+        if [ -n "$line" ]; then
+            entry="${entry}${line}^"
+            [ -z "$first" ] && first="$line"
+        else
+            break
+        fi
+    done
+
+    echo "$entry" >> "$PHONEBOOK"
+    sort -o "$PHONEBOOK" "$PHONEBOOK"
+    echo
+    echo "$first has been added to the phone book"
+}
+
+# Function to look someone up
+lookup_entry() {
+    for name in "$@"; do
+        tmpfile=$(mktemp)
+        grep -i "$name" "$PHONEBOOK" > "$tmpfile"
+
+        if [ ! -s "$tmpfile" ]; then
+          echo "I can't find $name in the phone book"
+        else
+          while IFS= read -r line; do
+            display_entry "$line"
+              done < "$tmpfile"
+              fi
+        rm -f "$tmpfile"
+    done
+}
+
+# List all entries
+list_all() {
+    IFS='^'
+    echo "-----------------------------------------------------"
+    while read -r line; do
+        set -- $line
+        eval printf "\"%-40.40s %s\\n\"" "\"$1\"" "\"\${$#}\""
+    done < "$PHONEBOOK"
+    echo "-----------------------------------------------------"
+}
+
+
+# Function to display an entry from the phonebook
+display_entry() {
+    local entry="$1"
+    echo
+    echo "--------------------------------------"
+
+    IFS="^"
+    set -- $entry
+
+    for field in "$1" "$2" "$3" "$4" "$5" "$6"; do
+        printf "| %-34.34s |\n" "$field"
+    done
+
+    echo "|           o            o           |"
+    echo "--------------------------------------"
+    echo
+}
+
+# Lookup if arguments are passed
+if [ "$#" -ne 0 ]; then
+    lookup_entry "$@"
+    exit
+fi
+
+
+# Menu loop
+while true; do
+    printf '
+
+Would you like to:
+1. Look someone up
+2. Add someone to the phone book
+3. Remove someone from the phone book
+4. Change an entry in the phone book
+5. List all names and numbers in the phone book
+6. Check variable names validity
+7. Check if input is a "yes" response
+8. Exit this program
+Please select one of the above (1-8): '
+
+    read choice
+    echo
+    case "$choice" in
+        1)
+            printf "Enter name to look up: "
+            read name
+            if [ -z "$name" ]; then
+                echo "Lookup ignored"
+            else
+                lookup_entry "$name"
+            fi
+            ;;
+        2)
+            add_entry
+            ;;
+        3)
+            printf "Enter name to remove: "
+            read name
+            if [ -z "$name" ]; then
+                echo "Removal ignored"
+            else
+                ./rem "$name"
+            fi
+            ;;
+        4)
+            printf "Enter name to change: "
+            read name
+            if [ -z "$name" ]; then
+                echo "Change ignored"
+            else
+                ./change "$name"
+            fi
+            ;;
+        5)
+            list_all
+            ;;
+        6)
+            printf "Enter variable names to check (space-separated): "
+            read -a vars
+            check_invalid "${vars[@]}"
+            ;;
+        7)
+            printf "Enter a response to check if it's 'yes': "
+            read response
+            if is_yes "$response"; then
+                echo "'$response' is a valid 'yes' response."
+            else
+                echo "'$response' is not a valid 'yes' response."
+            fi
+            ;;
+        8)
+            exit 0
+            ;;
+        *)
+            echo "Bad choice"
+            ;;
+    esac
+done
+
