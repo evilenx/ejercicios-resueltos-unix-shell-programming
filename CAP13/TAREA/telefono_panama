@@ -1,0 +1,25 @@
+#!/bin/bash
+
+validar_telefono() {
+    local numero=$(echo "$1" | tr -d ' ()-')
+    
+    # Patrón: +507 seguido de 8 dígitos (móviles: 6xxx-xxxx, fijos: otros)
+    if [[ $numero =~ ^\+5076[0-9]{7}$ ]]; then
+        echo "Movil Panama valido: $1"
+    elif [[ $numero =~ ^\+507[2-9][0-9]{6}$ ]]; then
+        echo "Fijo Panama valido: $1" 
+    elif [[ $numero =~ ^5076[0-9]{7}$ ]]; then
+        echo "Movil Panama valido (agregar +): +$1"
+    elif [[ $numero =~ ^507[2-9][0-9]{6}$ ]]; then
+        echo "Fijo Panama valido (agregar +): +$1"
+    elif [[ $numero =~ ^6[0-9]{7}$ ]]; then
+        echo "Movil Panama valido (formato completo): +507-$1"
+    elif [[ $numero =~ ^[2-9][0-9]{6}$ ]]; then
+        echo "Fijo Panama valido (formato completo): +507-$1"
+    else
+        echo "Numero invalido: $1"
+    fi
+}
+
+read -p "Numero de telefono: " telefono
+validar_telefono "$telefono"

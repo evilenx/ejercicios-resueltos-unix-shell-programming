@@ -1,0 +1,28 @@
+if [ $# -ne 1 ]; then
+    exit 1
+fi
+
+input=$(echo "$1" | tr '[:upper:]' '[:lower:]')
+
+# Check if the input matches any of the valid "yes" responses
+if [[ "$input" == "yes" || "$input" == "y" ]]; then
+    exit 0
+else
+    exit 1
+fi
+
+
+#
+
+if [ $# -ne 1 ]; then
+    exit 1
+fi
+
+if [[ "$1" == "yes" || "$1" == "Yes" || "$1" == "YES" || "$1" == "y" || "$1" == "Y" ]]; then
+    exit 0
+else
+    exit 1
+fi
+
+
+# otro calcular cuánto tiempo estuve logeado con date y la últ

@@ -1,0 +1,19 @@
+read -p "Introduce una dirección IP: " ip
+
+# Validar dirección IP
+if [[ $ip =~ ^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$ ]]; then
+    echo "La dirección IP $ip es válida."
+else
+    echo "La dirección IP $ip no es válida."
+fi
+
+# Leer dirección MAC
+read -p "Introduce una dirección MAC: " mac
+
+# Validar dirección MAC
+if [[ $mac =~ ^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$ ]]; then
+    echo "La dirección MAC $mac es válida."
+else
+    echo "La dirección MAC $mac no es válida."
+fi
+

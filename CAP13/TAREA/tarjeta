@@ -1,0 +1,35 @@
+#!/bin/bash
+
+luhn() {
+    local n="$1" s=0 p=0
+    for ((i=${#n}-1; i>=0; i--)); do
+        d=${n:i:1}; ((p)) && { d=$((d*2)); ((d>9)) && d=$((d-9)); }
+        s=$((s+d)); p=$((1-p))
+    done
+    ((s%10==0))
+}
+
+# Función para detectar tipo y validar formato
+validar() {
+    local card=$(echo "$1" | tr -d ' -')
+    [[ $card =~ ^[0-9]{13,19}$ ]] || { echo "Formato invalido"; return 1; }
+    
+    if [[ $card =~ ^4[0-9]{12}$ ]] || [[ $card =~ ^4[0-9]{15}$ ]] || [[ $card =~ ^4[0-9]{18}$ ]]; then
+        tipo="Visa"
+    elif [[ $card =~ ^5[1-5][0-9]{14}$ ]] || [[ $card =~ ^2[2-7][0-9]{14}$ ]]; then
+        tipo="MasterCard"
+    elif [[ $card =~ ^3[47][0-9]{13}$ ]]; then
+        tipo="American Express"
+    elif [[ $card =~ ^6011[0-9]{12}$ ]] || [[ $card =~ ^65[0-9]{14}$ ]]; then
+        tipo="Discover"
+    elif [[ $card =~ ^35[0-9]{14}$ ]]; then
+        tipo="JCB"
+    else
+        tipo="Desconocido"
+    fi
+    
+    luhn "$card" && echo "$tipo valida: $1" || echo "$tipo invalida: $1"
+}
+
+read -p "Número de tarjeta: " tarjeta
+validar "$tarjeta"

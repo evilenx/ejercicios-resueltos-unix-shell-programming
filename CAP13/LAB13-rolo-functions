@@ -1,4 +1,3 @@
-#
 # Set PHONEBOOK to point to the phone book file
 : ${PHONEBOOK:="$HOME/phonebook"}
 export PHONEBOOK
@@ -97,7 +96,6 @@ list_all() {
     echo "-----------------------------------------------------"
 }
 
-
 # Function to display an entry from the phonebook
 display_entry() {
     local entry="$1"
@@ -116,12 +114,86 @@ display_entry() {
     echo
 }
 
+# IP y MAC
+validar_ip_mac() {
+    printf "Introduce una dirección IP: "
+    read ip
+    if [[ $ip =~ ^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$ ]]; then
+        echo "La dirección IP $ip es válida."
+    else
+        echo "La dirección IP $ip no es válida."
+    fi
+
+    printf "Introduce una dirección MAC: "
+    read mac
+    if [[ $mac =~ ^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$ ]]; then
+        echo "La dirección MAC $mac es válida."
+    else
+        echo "La dirección MAC $mac no es válida."
+    fi
+}
+
+# function tarjeta
+luhn() {
+    local n="$1" s=0 p=0
+    for ((i=${#n}-1; i>=0; i--)); do
+        d=${n:i:1}; ((p)) && { d=$((d*2)); ((d>9)) && d=$((d-9)); }
+        s=$((s+d)); p=$((1-p))
+    done
+    ((s%10==0))
+}
+
+validar_tarjeta() {
+    printf "Número de tarjeta: "
+    read tarjeta
+    local card=$(echo "$tarjeta" | tr -d ' -')
+    [[ $card =~ ^[0-9]{13,19}$ ]] || { echo "Formato invalido"; return 1; }
+
+    if [[ $card =~ ^4[0-9]{12}$ ]] || [[ $card =~ ^4[0-9]{15}$ ]] || [[ $card =~ ^4[0-9]{18}$ ]]; then
+        tipo="Visa"
+    elif [[ $card =~ ^5[1-5][0-9]{14}$ ]] || [[ $card =~ ^2[2-7][0-9]{14}$ ]]; then
+        tipo="MasterCard"
+    elif [[ $card =~ ^3[47][0-9]{13}$ ]]; then
+        tipo="American Express"
+    elif [[ $card =~ ^6011[0-9]{12}$ ]] || [[ $card =~ ^65[0-9]{14}$ ]]; then
+        tipo="Discover"
+    elif [[ $card =~ ^35[0-9]{14}$ ]]; then
+        tipo="JCB"
+    else
+        tipo="Desconocido"
+    fi
+
+    luhn "$card" && echo "$tipo valida: $tarjeta" || echo "$tipo invalida: $tarjeta"
+}
+
+# Función de validación de teléfonos de Panamá
+validar_telefono_panama() {
+    printf "Numero de telefono: "
+    read telefono
+    local numero=$(echo "$telefono" | tr -d ' ()-')
+
+    if [[ $numero =~ ^\+5076[0-9]{7}$ ]]; then
+        echo "Movil Panama valido: $telefono"
+    elif [[ $numero =~ ^\+507[2-9][0-9]{6}$ ]]; then
+        echo "Fijo Panama valido: $telefono"
+    elif [[ $numero =~ ^5076[0-9]{7}$ ]]; then
+        echo "Movil Panama valido (agregar +): +$telefono"
+    elif [[ $numero =~ ^507[2-9][0-9]{6}$ ]]; then
+        echo "Fijo Panama valido (agregar +): +$telefono"
+    elif [[ $numero =~ ^6[0-9]{7}$ ]]; then
+        echo "Movil Panama valido (formato completo): +507-$telefono"
+    elif [[ $numero =~ ^[2-9][0-9]{6}$ ]]; then
+        echo "Fijo Panama valido (formato completo): +507-$telefono"
+    else
+        echo "Numero invalido: $telefono"
+    fi
+}
+
 # Lookup if arguments are passed
 if [ "$#" -ne 0 ]; then
     lookup_entry "$@"
     exit
 fi
-
 
 # Menu loop
 while true; do
@@ -135,8 +207,11 @@ Would you like to:
 5. List all names and numbers in the phone book
 6. Check variable names validity
 7. Check if input is a "yes" response
-8. Exit this program
-Please select one of the above (1-8): '
+8. Validate IP and MAC addresses
+9. Validate credit cards
+10. Validate Panama phone numbers
+11. Exit this program
+Please select one of the above (1-11): '
 
     read choice
     echo
@@ -189,6 +264,15 @@ Please select one of the above (1-8): '
             fi
             ;;
         8)
+            validar_ip_mac
+            ;;
+        9)
+            validar_tarjeta
+            ;;
+        10)
+            validar_telefono_panama
+            ;;
+        11)
             exit 0
             ;;
         *)
@@ -196,4 +280,3 @@ Please select one of the above (1-8): '
             ;;
     esac
 done
-
