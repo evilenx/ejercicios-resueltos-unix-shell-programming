@@ -14,6 +14,56 @@ if [ ! -e "$PHONEBOOK" ]; then
     > "$PHONEBOOK" || exit 1
 fi
 
+
+
+
+# function rem 
+rem() {
+name=$1
+
+#
+# Get matching entries and save in temp file
+#
+
+grep "$name" $PHONEBOOK > /tmp/matches$$
+if [ ! -s /tmp/matches$$ ]
+then
+    echo "I can't find $name in the phone book"
+    exit 1
+fi
+
+#
+# Display matching entries one at a time and confirm removal
+#
+
+while read line
+do
+    display_entry "$line"
+    printf "Remove this entry (y/n)? "
+    read answer < /dev/tty
+
+    if [ "$answer" = y ]
+    then
+	break
+    fi
+done < /tmp/matches$$
+
+rm /tmp/matches$$
+
+if [ "$answer" = y ]
+then
+    if grep -v "^$line$" $PHONEBOOK > /tmp/phonebook$$
+    then
+	mv /tmp/phonebook$$ $PHONEBOOK
+	echo "Selected entry has been removed"
+    else
+	echo "Entry not removed"
+    fi
+fi
+}
+
+
+
 # Function to check if variable names are valid
 check_invalid() {
     if [ $# -eq 0 ]; then
@@ -29,6 +79,68 @@ check_invalid() {
         fi
     done
 }
+
+
+
+# function change 
+
+change() {
+
+grep "$name" $PHONEBOOK > /tmp/matches$$
+if [ ! -s /tmp/matches$$ ]
+then
+    echo "I can't find $name in the phone book"
+    exit 1
+fi
+
+#
+# Display matching entries one at a time and confirm change
+#
+
+while read line
+do
+    display_entry "$line"
+    printf "Change this entry (y/n)? "
+    read answer < /dev/tty
+
+    if [ "$answer" = y ]
+    then
+	break
+    fi
+done < /tmp/matches$$
+
+rm /tmp/matches$$
+
+if [ "$answer" != y ]
+then
+    exit
+fi
+
+#
+# Start up editor on the confirmed entry
+#
+
+printf "$line" | tr '^' '\012' > /tmp/ed$$
+echo "Enter changes with ${EDITOR:=/bin/ed}"
+trap "" 2  # don't abort if DELETE hit while editing
+$EDITOR /tmp/ed$$
+
+#
+# Remove old entry now and insert new one
+#
+
+grep -v "^$line$" $PHONEBOOK > /tmp/phonebook$$
+{ tr '\012' '^' < /tmp/ed$$; echo; } >> /tmp/phonebook$$
+# last echo was to put back trailing newline translated by tr
+
+sort /tmp/phonebook$$ -o $PHONEBOOK
+rm /tmp/ed$$ /tmp/phonebook$$
+
+}
+
+
+
+
 
 # Function to check if input is a "yes" response
 is_yes() {
@@ -234,7 +346,7 @@ Please select one of the above (1-11): '
             if [ -z "$name" ]; then
                 echo "Removal ignored"
             else
-                ./rem "$name"
+                rem "$name"
             fi
             ;;
         4)
@@ -243,7 +355,7 @@ Please select one of the above (1-11): '
             if [ -z "$name" ]; then
                 echo "Change ignored"
             else
-                ./change "$name"
+                change "$name"
             fi
             ;;
         5)
