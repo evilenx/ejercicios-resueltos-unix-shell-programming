@@ -14,198 +14,306 @@ if [ ! -e "$PHONEBOOK" ]; then
     > "$PHONEBOOK" || exit 1
 fi
 
-
-
-
-# function rem 
-rem() {
-name=$1
-
-#
-# Get matching entries and save in temp file
-#
-
-grep "$name" $PHONEBOOK > /tmp/matches$$
-if [ ! -s /tmp/matches$$ ]
-then
-    echo "I can't find $name in the phone book"
-    exit 1
-fi
-
-#
-# Display matching entries one at a time and confirm removal
-#
-
-while read line
-do
-    display_entry "$line"
-    printf "Remove this entry (y/n)? "
-    read answer < /dev/tty
-
-    if [ "$answer" = y ]
-    then
-	break
-    fi
-done < /tmp/matches$$
-
-rm /tmp/matches$$
-
-if [ "$answer" = y ]
-then
-    if grep -v "^$line$" $PHONEBOOK > /tmp/phonebook$$
-    then
-	mv /tmp/phonebook$$ $PHONEBOOK
-	echo "Selected entry has been removed"
-    else
-	echo "Entry not removed"
-    fi
-fi
-}
-
-
-
-# Function to check if variable names are valid
-check_invalid() {
-    if [ $# -eq 0 ]; then
-        echo "Usage: check_invalid varname1 varname2 ... varnamen"
-        return 1
-    fi
-
-    for varname in "$@"; do
-        if [[ "$varname" =~ ^[A-Za-z_][A-Za-z0-9_]*$ ]]; then
-            echo "$varname VALID."
+# Function to ask if user wants to continue or return to main menu
+ask_continue() {
+    while true; do
+        read -p "Do you want to continue with this function or return to main menu? (c/m): " answer
+        if [[ $answer =~ ^[cC]$ ]]; then
+            return 0  # Continue
+        elif [[ $answer =~ ^[mM]$ ]]; then
+            return 1  # Return to main menu
         else
-            echo "$varname INVALID."
+            echo "Please enter 'c' for continue or 'm' for main menu."
         fi
     done
 }
 
+# Function to check email with regular expressions
+check_mail() {
+    while true; do
+        read -p "Insert email: " mail
+        local regex="^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
 
+        if [[ $mail =~ $regex ]]; then
+            echo "The email '$mail' is valid."
+        else
+            echo "The email '$mail' is invalid."
+        fi
 
-# function change 
-
-change() {
-
-grep "$name" $PHONEBOOK > /tmp/matches$$
-if [ ! -s /tmp/matches$$ ]
-then
-    echo "I can't find $name in the phone book"
-    exit 1
-fi
-
-#
-# Display matching entries one at a time and confirm change
-#
-
-while read line
-do
-    display_entry "$line"
-    printf "Change this entry (y/n)? "
-    read answer < /dev/tty
-
-    if [ "$answer" = y ]
-    then
-	break
+        read -p "Do you want to check another email? (y/n): " answer
+        if [[ ! $answer =~ ^[yY]$ ]]; then
+            echo "Exiting email check function."
+            break
+        fi
+    done
+    
+    # Ask if user wants to continue or return to main menu
+    if ! ask_continue; then
+        return
     fi
-done < /tmp/matches$$
-
-rm /tmp/matches$$
-
-if [ "$answer" != y ]
-then
-    exit
-fi
-
-#
-# Start up editor on the confirmed entry
-#
-
-printf "$line" | tr '^' '\012' > /tmp/ed$$
-echo "Enter changes with ${EDITOR:=/bin/ed}"
-trap "" 2  # don't abort if DELETE hit while editing
-$EDITOR /tmp/ed$$
-
-#
-# Remove old entry now and insert new one
-#
-
-grep -v "^$line$" $PHONEBOOK > /tmp/phonebook$$
-{ tr '\012' '^' < /tmp/ed$$; echo; } >> /tmp/phonebook$$
-# last echo was to put back trailing newline translated by tr
-
-sort /tmp/phonebook$$ -o $PHONEBOOK
-rm /tmp/ed$$ /tmp/phonebook$$
-
 }
 
+# Function to remove entry
+rem() {
+    while true; do
+        read -p "Enter name to remove: " name
+        if [ -z "$name" ]; then
+            echo "Removal ignored - no name provided"
+            if ! ask_continue; then
+                return
+            fi
+            continue
+        fi
 
+        # Get matching entries and save in temp file
+        grep "$name" $PHONEBOOK > /tmp/matches$$
+        if [ ! -s /tmp/matches$$ ]; then
+            echo "I can't find $name in the phone book"
+            rm -f /tmp/matches$$
+            if ! ask_continue; then
+                return
+            fi
+            continue
+        fi
 
+        # Display matching entries one at a time and confirm removal
+        while read line; do
+            display_entry "$line"
+            printf "Remove this entry (y/n)? "
+            read answer < /dev/tty
 
+            if [ "$answer" = y ]; then
+                break
+            fi
+        done < /tmp/matches$$
+
+        rm /tmp/matches$$
+
+        if [ "$answer" = y ]; then
+            if grep -v "^$line$" $PHONEBOOK > /tmp/phonebook$$; then
+                mv /tmp/phonebook$$ $PHONEBOOK
+                echo "Selected entry has been removed"
+            else
+                echo "Entry not removed"
+            fi
+        fi
+
+        # Ask if user wants to continue or return to main menu
+        if ! ask_continue; then
+            return
+        fi
+    done
+}
+
+# Function to check if variable names are valid
+check_invalid() {
+    while true; do
+        printf "Enter variable names to check (space-separated): "
+        read -a vars
+        
+        if [ ${#vars[@]} -eq 0 ]; then
+            echo "Usage: Please provide at least one variable name"
+            if ! ask_continue; then
+                return
+            fi
+            continue
+        fi
+
+        for varname in "${vars[@]}"; do
+            if [[ "$varname" =~ ^[A-Za-z_][A-Za-z0-9_]*$ ]]; then
+                echo "$varname is VALID."
+            else
+                echo "$varname is INVALID."
+            fi
+        done
+
+        # Ask if user wants to continue or return to main menu
+        if ! ask_continue; then
+            return
+        fi
+    done
+}
+
+# Function to change entry
+change() {
+    while true; do
+        read -p "Enter name to change: " name
+        if [ -z "$name" ]; then
+            echo "Change ignored - no name provided"
+            if ! ask_continue; then
+                return
+            fi
+            continue
+        fi
+
+        grep "$name" $PHONEBOOK > /tmp/matches$$
+        if [ ! -s /tmp/matches$$ ]; then
+            echo "I can't find $name in the phone book"
+            rm -f /tmp/matches$$
+            if ! ask_continue; then
+                return
+            fi
+            continue
+        fi
+
+        # Display matching entries one at a time and confirm change
+        while read line; do
+            display_entry "$line"
+            printf "Change this entry (y/n)? "
+            read answer < /dev/tty
+
+            if [ "$answer" = y ]; then
+                break
+            fi
+        done < /tmp/matches$$
+
+        rm /tmp/matches$$
+
+        if [ "$answer" != y ]; then
+            if ! ask_continue; then
+                return
+            fi
+            continue
+        fi
+
+        # Start up editor on the confirmed entry
+        printf "$line" | tr '^' '\012' > /tmp/ed$$
+        echo "Enter changes with ${EDITOR:=/bin/ed}"
+        trap "" 2  # don't abort if DELETE hit while editing
+        $EDITOR /tmp/ed$$
+
+        # Remove old entry now and insert new one
+        grep -v "^$line$" $PHONEBOOK > /tmp/phonebook$$
+        { tr '\012' '^' < /tmp/ed$$; echo; } >> /tmp/phonebook$$
+        # last echo was to put back trailing newline translated by tr
+
+        sort /tmp/phonebook$$ -o $PHONEBOOK
+        rm /tmp/ed$$ /tmp/phonebook$$
+
+        echo "Entry has been changed successfully"
+
+        # Ask if user wants to continue or return to main menu
+        if ! ask_continue; then
+            return
+        fi
+    done
+}
 
 # Function to check if input is a "yes" response
 is_yes() {
-    if [ $# -ne 1 ]; then
-        return 1
-    fi
+    while true; do
+        printf "Enter a response to check if it's 'yes': "
+        read response
+        
+        if [ -z "$response" ]; then
+            echo "Please provide a response to check"
+            if ! ask_continue; then
+                return
+            fi
+            continue
+        fi
 
-    local input
-    input=$(echo "$1" | tr '[:upper:]' '[:lower:]')
+        local input
+        input=$(echo "$response" | tr '[:upper:]' '[:lower:]')
 
-    [[ "$input" == "yes" || "$input" == "y" ]]
+        if [[ "$input" == "yes" || "$input" == "y" ]]; then
+            echo "'$response' is a valid 'yes' response."
+        else
+            echo "'$response' is not a valid 'yes' response."
+        fi
+
+        # Ask if user wants to continue or return to main menu
+        if ! ask_continue; then
+            return
+        fi
+    done
 }
 
 # Function to add someone to the phonebook
 add_entry() {
-    echo "Type in your new entry"
-    echo "When you're done, type just a single Enter on the line."
-
-    local first=""
-    local entry=""
-    local line
-
     while true; do
-        printf ">> "
-        read line
-        if [ -n "$line" ]; then
-            entry="${entry}${line}^"
-            [ -z "$first" ] && first="$line"
+        echo "Type in your new entry"
+        echo "When you're done, type just a single Enter on the line."
+
+        local first=""
+        local entry=""
+        local line
+
+        while true; do
+            printf ">> "
+            read line
+            if [ -n "$line" ]; then
+                entry="${entry}${line}^"
+                [ -z "$first" ] && first="$line"
+            else
+                break
+            fi
+        done
+
+        if [ -n "$entry" ]; then
+            echo "$entry" >> "$PHONEBOOK"
+            sort -o "$PHONEBOOK" "$PHONEBOOK"
+            echo
+            echo "$first has been added to the phone book"
         else
-            break
+            echo "No entry added - no data provided"
+        fi
+
+        # Ask if user wants to continue or return to main menu
+        if ! ask_continue; then
+            return
         fi
     done
-
-    echo "$entry" >> "$PHONEBOOK"
-    sort -o "$PHONEBOOK" "$PHONEBOOK"
-    echo
-    echo "$first has been added to the phone book"
 }
 
 # Function to look someone up
 lookup_entry() {
-    for name in "$@"; do
+    while true; do
+        printf "Enter name to look up: "
+        read name
+        if [ -z "$name" ]; then
+            echo "Lookup ignored - no name provided"
+            if ! ask_continue; then
+                return
+            fi
+            continue
+        fi
+
         tmpfile=$(mktemp)
         grep -i "$name" "$PHONEBOOK" > "$tmpfile"
 
         if [ ! -s "$tmpfile" ]; then
-          echo "I can't find $name in the phone book"
+            echo "I can't find $name in the phone book"
         else
-          while IFS= read -r line; do
-            display_entry "$line"
-              done < "$tmpfile"
-              fi
+            while IFS= read -r line; do
+                display_entry "$line"
+            done < "$tmpfile"
+        fi
         rm -f "$tmpfile"
+
+        # Ask if user wants to continue or return to main menu
+        if ! ask_continue; then
+            return
+        fi
     done
 }
 
 # List all entries
 list_all() {
-    IFS='^'
-    echo "-----------------------------------------------------"
-    while read -r line; do
-        set -- $line
-        eval printf "\"%-40.40s %s\\n\"" "\"$1\"" "\"\${$#}\""
-    done < "$PHONEBOOK"
-    echo "-----------------------------------------------------"
+    while true; do
+        IFS='^'
+        echo "-----------------------------------------------------"
+        while read -r line; do
+            set -- $line
+            eval printf "\"%-40.40s %s\\n\"" "\"$1\"" "\"\${$#}\""
+        done < "$PHONEBOOK"
+        echo "-----------------------------------------------------"
+
+        # Ask if user wants to continue or return to main menu
+        if ! ask_continue; then
+            return
+        fi
+    done
 }
 
 # Function to display an entry from the phonebook
@@ -226,26 +334,33 @@ display_entry() {
     echo
 }
 
-# IP y MAC
-validar_ip_mac() {
-    printf "Introduce una dirección IP: "
-    read ip
-    if [[ $ip =~ ^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$ ]]; then
-        echo "La dirección IP $ip es válida."
-    else
-        echo "La dirección IP $ip no es válida."
-    fi
+# Function to validate IP and MAC addresses
+validate_ip_mac() {
+    while true; do
+        printf "Enter an IP address: "
+        read ip
+        if [[ $ip =~ ^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$ ]]; then
+            echo "The IP address $ip is valid."
+        else
+            echo "The IP address $ip is not valid."
+        fi
 
-    printf "Introduce una dirección MAC: "
-    read mac
-    if [[ $mac =~ ^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$ ]]; then
-        echo "La dirección MAC $mac es válida."
-    else
-        echo "La dirección MAC $mac no es válida."
-    fi
+        printf "Enter a MAC address: "
+        read mac
+        if [[ $mac =~ ^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$ ]]; then
+            echo "The MAC address $mac is valid."
+        else
+            echo "The MAC address $mac is not valid."
+        fi
+
+        # Ask if user wants to continue or return to main menu
+        if ! ask_continue; then
+            return
+        fi
+    done
 }
 
-# function tarjeta
+# Luhn algorithm for credit card validation
 luhn() {
     local n="$1" s=0 p=0
     for ((i=${#n}-1; i>=0; i--)); do
@@ -255,50 +370,77 @@ luhn() {
     ((s%10==0))
 }
 
-validar_tarjeta() {
-    printf "Número de tarjeta: "
-    read tarjeta
-    local card=$(echo "$tarjeta" | tr -d ' -')
-    [[ $card =~ ^[0-9]{13,19}$ ]] || { echo "Formato invalido"; return 1; }
+# Function to validate credit cards
+validate_card() {
+    while true; do
+        printf "Credit card number: "
+        read card_number
+        local card=$(echo "$card_number" | tr -d ' -')
+        
+        if [[ ! $card =~ ^[0-9]{13,19}$ ]]; then
+            echo "Invalid format"
+            if ! ask_continue; then
+                return
+            fi
+            continue
+        fi
 
-    if [[ $card =~ ^4[0-9]{12}$ ]] || [[ $card =~ ^4[0-9]{15}$ ]] || [[ $card =~ ^4[0-9]{18}$ ]]; then
-        tipo="Visa"
-    elif [[ $card =~ ^5[1-5][0-9]{14}$ ]] || [[ $card =~ ^2[2-7][0-9]{14}$ ]]; then
-        tipo="MasterCard"
-    elif [[ $card =~ ^3[47][0-9]{13}$ ]]; then
-        tipo="American Express"
-    elif [[ $card =~ ^6011[0-9]{12}$ ]] || [[ $card =~ ^65[0-9]{14}$ ]]; then
-        tipo="Discover"
-    elif [[ $card =~ ^35[0-9]{14}$ ]]; then
-        tipo="JCB"
-    else
-        tipo="Desconocido"
-    fi
+        local card_type
+        if [[ $card =~ ^4[0-9]{12}$ ]] || [[ $card =~ ^4[0-9]{15}$ ]] || [[ $card =~ ^4[0-9]{18}$ ]]; then
+            card_type="Visa"
+        elif [[ $card =~ ^5[1-5][0-9]{14}$ ]] || [[ $card =~ ^2[2-7][0-9]{14}$ ]]; then
+            card_type="MasterCard"
+        elif [[ $card =~ ^3[47][0-9]{13}$ ]]; then
+            card_type="American Express"
+        elif [[ $card =~ ^6011[0-9]{12}$ ]] || [[ $card =~ ^65[0-9]{14}$ ]]; then
+            card_type="Discover"
+        elif [[ $card =~ ^35[0-9]{14}$ ]]; then
+            card_type="JCB"
+        else
+            card_type="Unknown"
+        fi
 
-    luhn "$card" && echo "$tipo valida: $tarjeta" || echo "$tipo invalida: $tarjeta"
+        if luhn "$card"; then
+            echo "$card_type valid: $card_number"
+        else
+            echo "$card_type invalid: $card_number"
+        fi
+
+        # Ask if user wants to continue or return to main menu
+        if ! ask_continue; then
+            return
+        fi
+    done
 }
 
-# Función de validación de teléfonos de Panamá
-validar_telefono_panama() {
-    printf "Numero de telefono: "
-    read telefono
-    local numero=$(echo "$telefono" | tr -d ' ()-')
+# Function to validate Panama phone numbers
+validate_panama_phone() {
+    while true; do
+        printf "Phone number: "
+        read phone
+        local number=$(echo "$phone" | tr -d ' ()-')
 
-    if [[ $numero =~ ^\+5076[0-9]{7}$ ]]; then
-        echo "Movil Panama valido: $telefono"
-    elif [[ $numero =~ ^\+507[2-9][0-9]{6}$ ]]; then
-        echo "Fijo Panama valido: $telefono"
-    elif [[ $numero =~ ^5076[0-9]{7}$ ]]; then
-        echo "Movil Panama valido (agregar +): +$telefono"
-    elif [[ $numero =~ ^507[2-9][0-9]{6}$ ]]; then
-        echo "Fijo Panama valido (agregar +): +$telefono"
-    elif [[ $numero =~ ^6[0-9]{7}$ ]]; then
-        echo "Movil Panama valido (formato completo): +507-$telefono"
-    elif [[ $numero =~ ^[2-9][0-9]{6}$ ]]; then
-        echo "Fijo Panama valido (formato completo): +507-$telefono"
-    else
-        echo "Numero invalido: $telefono"
-    fi
+        if [[ $number =~ ^\+5076[0-9]{7}$ ]]; then
+            echo "Valid Panama mobile: $phone"
+        elif [[ $number =~ ^\+507[2-9][0-9]{6}$ ]]; then
+            echo "Valid Panama landline: $phone"
+        elif [[ $number =~ ^5076[0-9]{7}$ ]]; then
+            echo "Valid Panama mobile (add +): +$phone"
+        elif [[ $number =~ ^507[2-9][0-9]{6}$ ]]; then
+            echo "Valid Panama landline (add +): +$phone"
+        elif [[ $number =~ ^6[0-9]{7}$ ]]; then
+            echo "Valid Panama mobile (complete format): +507-$phone"
+        elif [[ $number =~ ^[2-9][0-9]{6}$ ]]; then
+            echo "Valid Panama landline (complete format): +507-$phone"
+        else
+            echo "Invalid number: $phone"
+        fi
+
+        # Ask if user wants to continue or return to main menu
+        if ! ask_continue; then
+            return
+        fi
+    done
 }
 
 # Lookup if arguments are passed
@@ -307,7 +449,7 @@ if [ "$#" -ne 0 ]; then
     exit
 fi
 
-# Menu loop
+# Main menu loop
 while true; do
     printf '
 
@@ -322,73 +464,52 @@ Would you like to:
 8. Validate IP and MAC addresses
 9. Validate credit cards
 10. Validate Panama phone numbers
-11. Exit this program
-Please select one of the above (1-11): '
+11. Check email with regular expressions
+12. Exit this program
+Please select one of the above (1-12): '
 
     read choice
     echo
     case "$choice" in
         1)
-            printf "Enter name to look up: "
-            read name
-            if [ -z "$name" ]; then
-                echo "Lookup ignored"
-            else
-                lookup_entry "$name"
-            fi
+            lookup_entry
             ;;
         2)
             add_entry
             ;;
         3)
-            printf "Enter name to remove: "
-            read name
-            if [ -z "$name" ]; then
-                echo "Removal ignored"
-            else
-                rem "$name"
-            fi
+            rem
             ;;
         4)
-            printf "Enter name to change: "
-            read name
-            if [ -z "$name" ]; then
-                echo "Change ignored"
-            else
-                change "$name"
-            fi
+            change
             ;;
         5)
             list_all
             ;;
         6)
-            printf "Enter variable names to check (space-separated): "
-            read -a vars
-            check_invalid "${vars[@]}"
+            check_invalid
             ;;
         7)
-            printf "Enter a response to check if it's 'yes': "
-            read response
-            if is_yes "$response"; then
-                echo "'$response' is a valid 'yes' response."
-            else
-                echo "'$response' is not a valid 'yes' response."
-            fi
+            is_yes
             ;;
         8)
-            validar_ip_mac
+            validate_ip_mac
             ;;
         9)
-            validar_tarjeta
+            validate_card
             ;;
         10)
-            validar_telefono_panama
+            validate_panama_phone
             ;;
         11)
+            check_mail
+            ;;
+        12)
+            echo "Exiting program. Goodbye!"
             exit 0
             ;;
         *)
-            echo "Bad choice"
+            echo "Bad choice. Please select a number between 1-12."
             ;;
     esac
 done
