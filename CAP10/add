@@ -1,0 +1,10 @@
+
+if [ ! -n "$1" ]
+then
+    echo 'Uso: debe proporcionar una entrada no nula para el nombre'
+    exit 0
+fi
+
+echo "$1	$2" >> phonebook
+
+sort -u -o phonebook phonebook
