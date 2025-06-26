@@ -1,0 +1,83 @@
+a) $ awk '/garments/' stock.lst 
+102 Jeans 1000 10 garments
+103 Trousers 1200 5 garments
+
+
+b) $ awk '/electronics/ { print $2 ,$4 }' stock.lst
+
+Camera 3
+Laptop 15
+CellPhone 8
+
+c) $ awk '$4 <10' stock.lst
+
+102 Camera 5000 3 electronics
+103 Trousers 1200 5 garments
+105 CellPhone 8000 8 electronics
+
+d) $ awk 'NR >0 { print NR, $0 } ' stock.lst
+
+1 102 Jeans 1000 10 garments
+2 102 Camera 5000 3 electronics
+3 103 Trousers 1200 5 garments
+4 104 Laptop 40000 15 electronics
+5 105 CellPhone 8000 8 electronics
+
+
+
+e) $ awk 'NR == 2, NR == 4 { print NR, $0 } ' stock.lst
+
+2 102 Camera 5000 3 electronics
+3 103 Trousers 1200 5 garments
+4 104 Laptop 40000 15 electronics
+
+
+f) $ awk '{ print NR, NF } ' stock.lst
+
+1 5
+2 5
+3 5
+4 5
+5 5
+
+
+g) $  awk '{ print NR, $NF } ' stock.lst
+
+1 garments
+2 electronics
+3 garments
+4 electronics
+5 electronics
+
+
+h) $ awk '$5 ~/s$/' stock.lst
+
+
+102 Jeans 1000 10 garments
+102 Camera 5000 3 electronics
+103 Trousers 1200 5 garments
+104 Laptop 40000 15 electronics
+105 CellPhone 8000 8 electronics
+
+
+i) $ awk '$2 ~ "^C"' stock.lst
+
+
+102 Camera 5000 3 electronics
+105 CellPhone 8000 8 electronics
+
+
+j) $ awk '$2 ~ "^C" && $4 < 5' stock.lst
+
+102 Camera 5000 3 electronics
+
+
+
+
+
+
+
+
+
+
+
