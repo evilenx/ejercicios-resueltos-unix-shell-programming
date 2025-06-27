@@ -1,0 +1,67 @@
+# $ ls
+# feb96
+# jan12.02
+# jan19.02
+# jan26.02
+# jan5.02
+# jan95
+# jan96
+# jan97
+# jan98
+# mar98
+# memo1
+# memo10
+# memo2
+# memo2.sv
+# $
+# What would be the output from the following commands?
+# echo *                           echo [!0-9]
+# echo m[a-df-z]                  echo [A-Z]*
+# echo jan*                        echo .
+# echo ?????                       echo 02
+# echo jan?? feb?? mar??           echo [fjm][ae][bnr]
+
+
+
+
+# OUTPUT 
+
+
+echo *
+# Salida: feb96 jan12.02 jan19.02 jan26.02 jan5.02 jan95 jan96 jan97 jan98 mar98 memo1 memo10 memo2 memo2.sv
+
+echo m[a-df-z]*
+# Salida: mar98 memo1 memo10 memo2 memo2.sv
+# (m seguido de a-d o f-z: mar98, memo*)
+
+echo jan*
+# Salida: jan12.02 jan19.02 jan26.02 jan5.02 jan95 jan96 jan97 jan98
+# (todos los archivos que empiezan con "jan")
+
+echo ?????
+# Salida: feb96 jan95 jan96 jan97 jan98 mar98 memo1 memo2
+# (exactamente 5 caracteres)
+
+echo jan?? feb?? mar??
+# Salida: jan95 jan96 jan97 jan98 feb96 mar98
+# (jan/feb/mar seguido de exactamente 2 caracteres)
+
+echo *[!0-9]
+# Salida: (sin salida/vacío)
+# (archivos que NO terminen en dígito - no hay ninguno)
+
+echo [A-Z]*
+# Salida: (sin salida/vacío)
+# (archivos que empiecen con mayúscula - no hay ninguno)
+
+echo *.*
+# Salida: jan12.02 jan19.02 jan26.02 jan5.02 memo2.sv
+# (archivos que contengan un punto)
+
+echo *02
+# Salida: jan12.02 jan19.02 jan26.02 jan5.02
+# (archivos que terminen en "02")
+
+echo [fjm][ae][bnr]*
+# Salida: feb96 jan12.02 jan19.02 jan26.02 jan5.02 jan95 jan96 jan97 jan98 mar98
+# (f/j/m + a/e + b/n/r seguido de cualquier cosa)
