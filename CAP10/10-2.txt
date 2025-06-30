@@ -1,0 +1,14 @@
+2: What happens to mycp if one of the filenames contains a character that has a special meaning 
+to the shell such as ; or |?
+
+
+
+Respueta: lo que sucede con mycp si uno de los nombres de archivo contiene un
+carácter que tiene un significado especial para el shell, como ; o |, es que el
+programa aún parece funcionar, a excepción de los espacios en blanco. A pesar
+de intentar escapar los espacios con una \, estos siguen dividiéndose en el
+bucle for. La solución sería almacenar las variables en un arreglo.
+
+La razón por la que el programa funciona podría ser que la sustitución de
+nombres de archivo se realiza después de que la expresión se analiza en busca
+de caracteres especiales.
