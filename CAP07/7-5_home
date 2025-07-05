@@ -7,4 +7,30 @@
 # if /home/avilesh is aviles home directory. (Hint: Recall that the home directory is the sixth field stored in the file /etc/passwd
 
 
-echo $(grep "$1" /etc/passwd | cut -d : -f6)
+# echo $(grep "$1" /etc/passwd | cut -d : -f6)
+
+
+# modify my version
+
+
+#!/bin/bash
+
+# Verifica que se haya pasado un argumento
+if [ $# -ne 1 ]; then
+    echo "Uso: $0 nombre_de_usuario"
+    exit 1
+fi
+
+# Almacena el nombre de usuario en una variable
+usuario="$1"
+
+# Busca el directorio home del usuario en /etc/passwd y lo imprime
+home_dir=$(grep "^$usuario:" /etc/passwd | cut -d : -f6)
+
+# Verifica si se encontró el directorio home
+if [ -z "$home_dir" ]; then
+    echo "El usuario '$usuario' no existe."
+else
+    echo "$home_dir"
+fi
+
