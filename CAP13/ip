@@ -1,0 +1,22 @@
+while true; do
+    printf "Enter an IP address: "
+    read ip
+    if [[ $ip =~ ^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$ ]]; then
+        echo "The IP address $ip is valid."
+    else
+        echo "The IP address $ip is not valid."
+    fi
+
+    printf "Enter a MAC address: "
+    read mac
+    if [[ $mac =~ ^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$ ]]; then
+        echo "The MAC address $mac is valid."
+    else
+        echo "The MAC address $mac is not valid."
+    fi
+
+    # Ask if user wants to continue or return to main menu
+    if ! ask_continue; then
+        return
+    fi
+done

@@ -1,0 +1,27 @@
+
+while true; do
+    printf "Phone number: "
+    read phone
+    local number=$(echo "$phone" | tr -d ' ()-')
+
+    if [[ $number =~ ^\+5076[0-9]{7}$ ]]; then
+        echo "Valid Panama mobile: $phone"
+    elif [[ $number =~ ^\+507[2-9][0-9]{6}$ ]]; then
+        echo "Valid Panama landline: $phone"
+    elif [[ $number =~ ^5076[0-9]{7}$ ]]; then
+        echo "Valid Panama mobile (add +): +$phone"
+    elif [[ $number =~ ^507[2-9][0-9]{6}$ ]]; then
+        echo "Valid Panama landline (add +): +$phone"
+    elif [[ $number =~ ^6[0-9]{7}$ ]]; then
+        echo "Valid Panama mobile (complete format): +507-$phone"
+    elif [[ $number =~ ^[2-9][0-9]{6}$ ]]; then
+        echo "Valid Panama landline (complete format): +507-$phone"
+    else
+        echo "Invalid number: $phone"
+    fi
+
+    # Ask if user wants to continue or return to main menu
+    if ! ask_continue; then
+        return
+    fi
+done

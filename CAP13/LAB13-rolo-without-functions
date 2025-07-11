@@ -1,0 +1,87 @@
+# Set PHONEBOOK to point to the phone book file
+: ${PHONEBOOK:="$HOME/phonebook"}
+export PHONEBOOK
+
+if [ ! -e "$PHONEBOOK" ]; then
+    echo "$PHONEBOOK does not exist!"
+    printf "Should I create it for you (y/n)? "
+    read answer
+
+    if [ "$answer" != "y" ]; then
+        exit 1
+    fi
+
+    > "$PHONEBOOK" || exit 1
+fi
+
+# Lookup if arguments are passed
+if [ "$#" -ne 0 ]; then
+    lookup_entry "$@"
+    exit
+fi
+
+# Main menu loop
+while true; do
+    printf '
+
+Would you like to:
+1. Look someone up
+2. Add someone to the phone book
+3. Remove someone from the phone book
+4. Change an entry in the phone book
+5. List all names and numbers in the phone book
+6. Check variable names validity
+7. Check if input is a "yes" response
+8. Validate IP and MAC addresses
+9. Validate credit cards
+10. Validate Panama phone numbers
+11. Check email with regular expressions
+12. Exit this program
+Please select one of the above (1-12): '
+
+    read choice
+    echo
+    case "$choice" in
+        1)
+            ./lookup_entry
+            ;;
+        2)
+            ./add_entry
+            ;;
+        3)
+            rem
+            ;;
+        4)
+            ./change
+            ;;
+        5)
+            ./list_all
+            ;;
+        6)
+            ./check_invalid
+            ;;
+        7)
+            ./is_yes
+            ;;
+        8)
+            printf "ip valida"
+            ./ip
+            ;;
+        9)
+            ./validate_card
+            ;;
+        10)
+            ./validate_panama_phone
+            ;;
+        11)
+            ./check_mail
+            ;;
+        12)
+            echo "Exiting program. Goodbye!"
+            exit 0
+            ;;
+        *)
+            echo "Bad choice. Please select a number between 1-12."
+            ;;
+    esac
+done
